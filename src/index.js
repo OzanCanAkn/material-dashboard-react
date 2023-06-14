@@ -13,7 +13,7 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-import React from "react";
+import React, { StrictMode } from "react";
 import ReactDOM from "react-dom";
 import { BrowserRouter } from "react-router-dom";
 import App from "App";
@@ -24,7 +24,9 @@ import { MaterialUIControllerProvider } from "context";
 ReactDOM.render(
   <BrowserRouter>
     <MaterialUIControllerProvider>
-      <App />
+      <StrictMode>
+        <App />
+      </StrictMode>
     </MaterialUIControllerProvider>
   </BrowserRouter>,
   document.getElementById("root")
