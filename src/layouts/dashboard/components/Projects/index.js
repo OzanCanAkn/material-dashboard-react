@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /**
 =========================================================
 * Material Dashboard 2 React - v2.1.0
@@ -31,7 +32,8 @@ import DataTable from "examples/Tables/DataTable";
 // Data
 import data from "layouts/dashboard/components/Projects/data";
 
-function Projects() {
+function Projects({ stations }) {
+  console.log(stations);
   const { columns, rows } = data();
   const [menu, setMenu] = useState(null);
 

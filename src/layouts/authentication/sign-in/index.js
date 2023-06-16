@@ -13,14 +13,17 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-import { useState } from "react";
+// LoginPage.js
+import React from "react";
+import { Formik, Field, Form } from "formik";
+import api from "examples/api";
+import { TextField } from "@mui/material";
 
 // react-router-dom components
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 // @mui material components
 import Card from "@mui/material/Card";
-import Switch from "@mui/material/Switch";
 import Grid from "@mui/material/Grid";
 import MuiLink from "@mui/material/Link";
 
@@ -32,9 +35,7 @@ import GoogleIcon from "@mui/icons-material/Google";
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
-
 // Authentication layout components
 import BasicLayout from "layouts/authentication/components/BasicLayout";
 
@@ -42,10 +43,7 @@ import BasicLayout from "layouts/authentication/components/BasicLayout";
 import bgImage from "assets/images/bg-sign-in-basic.jpeg";
 
 function Basic() {
-  const [rememberMe, setRememberMe] = useState(false);
-
-  const handleSetRememberMe = () => setRememberMe(!rememberMe);
-
+  const navigate = useNavigate();
   return (
     <BasicLayout image={bgImage}>
       <Card>
@@ -82,30 +80,51 @@ function Basic() {
           </Grid>
         </MDBox>
         <MDBox pt={4} pb={3} px={3}>
-          <MDBox component="form" role="form">
-            <MDBox mb={2}>
-              <MDInput type="email" label="Email" fullWidth />
-            </MDBox>
-            <MDBox mb={2}>
-              <MDInput type="password" label="Password" fullWidth />
-            </MDBox>
-            <MDBox display="flex" alignItems="center" ml={-1}>
-              <Switch checked={rememberMe} onChange={handleSetRememberMe} />
-              <MDTypography
-                variant="button"
-                fontWeight="regular"
-                color="text"
-                onClick={handleSetRememberMe}
-                sx={{ cursor: "pointer", userSelect: "none", ml: -1 }}
-              >
-                &nbsp;&nbsp;Remember me
-              </MDTypography>
-            </MDBox>
-            <MDBox mt={4} mb={1}>
-              <MDButton variant="gradient" color="info" fullWidth>
-                sign in
-              </MDButton>
-            </MDBox>
+          <MDBox>
+            <Formik
+              initialValues={{ email: "", password: "" }}
+              onSubmit={async (values) => {
+                console.log(values);
+                try {
+                  const response = await api.post("/users/login/", { user: values });
+                  // Handle successful response here.
+                  console.log(response.data);
+                  localStorage.setItem("user", JSON.stringify(response.data.user));
+                  localStorage.setItem("token", response.data.user.token);
+                  localStorage.setItem("userId", JSON.stringify(response.data.user.id));
+                  navigate("/dashboard");
+                } catch (error) {
+                  // Handle error here.
+                  console.log(error);
+                }
+              }}
+            >
+              {({ errors, touched }) => (
+                <Form>
+                  <Field
+                    name="email"
+                    as={TextField}
+                    label="Email"
+                    error={touched.email && Boolean(errors.email)}
+                    helperText={touched.email && errors.email}
+                    style={{ marginBottom: "8px", width: "100%" }}
+                  />
+                  <Field
+                    name="password"
+                    as={TextField}
+                    label="Password"
+                    type="password"
+                    error={touched.password && Boolean(errors.password)}
+                    helperText={touched.password && errors.password}
+                    style={{ marginBottom: "8px", width: "100%" }}
+                  />
+                  <hr />
+                  <MDButton variant="contained" type="submit">
+                    Log In
+                  </MDButton>
+                </Form>
+              )}
+            </Formik>
             <MDBox mt={3} mb={1} textAlign="center">
               <MDTypography variant="button" color="text">
                 Don&apos;t have an account?{" "}

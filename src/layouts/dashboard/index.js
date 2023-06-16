@@ -15,39 +15,92 @@ Coded by www.creative-tim.com
 
 // @mui material components
 import Grid from "@mui/material/Grid";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 
 // Material Dashboard 2 React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
-import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import Footer from "examples/Footer";
 import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 // Dashboard components
-import Projects from "layouts/dashboard/components/Projects";
-import OrdersOverview from "layouts/dashboard/components/OrdersOverview";
 import { Card, Button } from "@mui/material";
 
 // Material Dashboard 2 React components
 import MDTypography from "components/MDTypography";
 import StationsMap from "examples/stationsMap";
+import AddChargingStationModal from "examples/stationModal";
+
+import axios from "axios";
+import Table from "./StationsTable";
+import RezTable from "./RezTable";
 
 function Dashboard() {
   const [isSelectorVisible, SetIsSelectorVisible] = useState(false);
   const [newStationPos, setNewStationPos] = useState([39.976512, 32.811111]);
-  console.log(newStationPos);
+  const [stations, setStations] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [rezs, setRezs] = useState([]);
+  const handleOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const getStations = () =>
+    axios
+      .get(`https://wiremap.vercel.app/api/hosts/${localStorage.getItem("userId")}/stations/`, {
+        headers: {
+          Authorization: `Token ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+          accept: "application/json;charset=UTF-8",
+        },
+      })
+      .then((response) => {
+        setStations(response.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+
+  const getRezs = () =>
+    axios
+      .get(`https://wiremap.vercel.app/api/hosts/${localStorage.getItem("userId")}/reservations/`, {
+        headers: {
+          Authorization: `Token ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+          accept: "application/json;charset=UTF-8",
+        },
+      })
+      .then((response) => {
+        console.log(response);
+        setRezs(response.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+
+  useEffect(() => {
+    getStations();
+    getRezs();
+  }, []);
+
+  console.log(rezs);
+
   const toggleSelector = () => {
     if (isSelectorVisible) {
       SetIsSelectorVisible(false);
+      if (newStationPos) {
+        handleOpen();
+      }
     } else {
       SetIsSelectorVisible(true);
     }
   };
-  console.log(newStationPos, "db");
+
   return (
     <DashboardLayout>
-      <DashboardNavbar />
       <MDBox py={3}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={6} lg={3}>
@@ -122,10 +175,17 @@ function Dashboard() {
                     isSelectorVisible={isSelectorVisible}
                     setNewStationPos={setNewStationPos}
                     newStationPos={newStationPos}
+                    stations={stations}
                   />
                   <Button onClick={toggleSelector}>
                     {!isSelectorVisible ? "Add New Station" : "Confirm"}
                   </Button>
+                  <AddChargingStationModal
+                    open={open}
+                    handleClose={handleClose}
+                    newStationPos={newStationPos}
+                    getStations={getStations}
+                  />
                 </MDBox>
               </MDBox>
             </MDBox>
@@ -133,16 +193,22 @@ function Dashboard() {
         </Grid>
         <MDBox>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6} lg={8}>
-              <Projects />
+            <Grid item xs={12}>
+              <Table refetch={getStations} stations={stations} />
             </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <OrdersOverview />
+          </Grid>
+        </MDBox>
+        <MDBox style={{ marginTop: "32px" }}>
+          <MDTypography variant="h4" gutterBottom>
+            Reservations
+          </MDTypography>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <RezTable rezs={rezs} />
             </Grid>
           </Grid>
         </MDBox>
       </MDBox>
-      <Footer />
     </DashboardLayout>
   );
 }

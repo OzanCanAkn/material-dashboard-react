@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { useEffect, useState } from "react";
 import {
   YMaps,
@@ -11,23 +12,8 @@ import {
 } from "@pbe/react-yandex-maps";
 import PropTypes from "prop-types";
 
-function StationsMap({ isSelectorVisible, setNewStationPos, newStationPos }) {
-  const clusterPoints = [
-    [39.925533, 32.801233],
-    [39.981234, 32.82],
-    [39.976512, 32.811111],
-    [39.939567, 32.866311],
-    [39.923512, 32.87665],
-    [39.903289, 32.882332],
-    [39.935533, 32.898689],
-    [39.915633, 32.806666],
-    [39.995733, 32.826487],
-    [39.952679, 32.813325],
-    [39.975933, 32.84789],
-    [39.986033, 32.826324],
-  ];
+function StationsMap({ isSelectorVisible, setNewStationPos, newStationPos, stations }) {
   const [pos, setPos] = useState(newStationPos);
-  console.log(newStationPos);
   const [listRef, setListRef] = useState(undefined);
   const [mapRef, setMapRef] = useState(undefined);
   const [selectorRef, setSelectorRef] = useState(undefined);
@@ -35,7 +21,6 @@ function StationsMap({ isSelectorVisible, setNewStationPos, newStationPos }) {
   useEffect(() => {
     if (!isSelectorVisible) {
       setPos(centerOfMap);
-      setNewStationPos(centerOfMap);
     }
   }, [isSelectorVisible, centerOfMap]);
 
@@ -106,8 +91,14 @@ function StationsMap({ isSelectorVisible, setNewStationPos, newStationPos }) {
             setListRef(ref);
           }}
         >
-          {clusterPoints.map((station, index) => (
-            <ListBoxItem data={{ content: `Station ${index}`, center: station, zoom: 14 }} />
+          {stations?.map((station) => (
+            <ListBoxItem
+              data={{
+                content: `Station ${station.id}`,
+                center: [station.latitude, station.longitude],
+                zoom: 14,
+              }}
+            />
           ))}
         </ListBox>
         <Clusterer
@@ -116,9 +107,23 @@ function StationsMap({ isSelectorVisible, setNewStationPos, newStationPos }) {
             groupByCoordinates: false,
           }}
         >
-          {clusterPoints.map((coordinates, index) => (
+          {stations?.map((station) => (
             // eslint-disable-next-line react/no-array-index-key
-            <Placemark key={index} geometry={coordinates} />
+            <Placemark
+              key={`Station-${station.id}`}
+              geometry={[station.latitude, station.longitude]}
+              options={{ preset: "islands#blueRepairShopCircleIcon", iconCaptionMaxWidth: 120 }}
+              properties={{
+                balloonContentHeader: `Station-${station.id} `,
+                balloonContentBody: `Price:${station.price}TL - Charge Speed:${station.charge_speed}KW/h`,
+                iconCaption:
+                  station.is_blocked || station.is_being_used
+                    ? "Busy"
+                    : `${station.charge_speed > 200 ? "Fast" : ""} ${
+                        station.price < 10 ? "Cheap" : ""
+                      }`,
+              }}
+            />
           ))}
         </Clusterer>
         {isSelectorVisible && (
